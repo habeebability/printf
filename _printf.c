@@ -1,42 +1,51 @@
 #include "main.h"
-#include <unistd.h>
 
 /**
- * _putchar - writes the character c to stdout
- * @c: The character to print
- * Return: On success 1.
- * On error, -1 is returned, and errno is set appropriately.
- * Description: _putchar uses a local buffer of 1024 to call write
- * as little as possible
+ * _printf - formatted output conversion and print data.
+ * @format: input string.
+ *
+ * Return: number of chars printed.
  */
-int _putchar(char c)
+int _printf(const char *format, ...)
 {
-    static char buf[1024];
-    static int i;
+	unsigned int i = 0, len = 0, ibuf = 0;
+	va_list arguments;
+	int (*function)(va_list, char *, unsigned int);
+	char *buffer;
 
-    if (c == -1 || i >= 1024)
-    {
-        write(1, &buf, i);
-        i = 0;
-    }
-    if (c != -1)
-    {
-        buf[i] = c;
-        i++;
-    }
-    return (1);
-}
-
-/**
- * _puts - prints a string to stdout
- * @str: pointer to the string to print
- * Return: number of chars written
- */
-int _puts(char *str)
-{
-    register int i;
-
-    for (i = 0; str[i] != '\0'; i++)
-        _putchar(str[i]);
-    return (i);
+	va_start(arguments, format), buffer = malloc(sizeof(char) * 1024);
+	if (!format || !buffer || (format[i] == '%' && !format[i + 1]))
+		return (-1);
+	if (!format[i])
+		return (0);
+	for (i = 0; format && format[i]; i++)
+	{
+		if (format[i] == '%')
+		{
+			if (format[i + 1] == '\0')
+			{	print_buf(buffer, ibuf), free(buffer), va_end(arguments);
+				return (-1);
+			}
+			else
+			{	function = get_print_func(format, i + 1);
+				if (function == NULL)
+				{
+					if (format[i + 1] == ' ' && !format[i + 2])
+						return (-1);
+					handl_buf(buffer, format[i], ibuf), len++, i--;
+				}
+				else
+				{
+					len += function(arguments, buffer, ibuf);
+					i += ev_print_func(format, i + 1);
+				}
+			} i++;
+		}
+		else
+			handl_buf(buffer, format[i], ibuf), len++;
+		for (ibuf = len; ibuf > 1024; ibuf -= 1024)
+			;
+	}
+	print_buf(buffer, ibuf), free(buffer), va_end(arguments);
+	return (len);
 }
